@@ -660,6 +660,37 @@ static void debug_show_configs(struct hda_codec *codec,
 //#include "patch_cirrus_explicit.h"
 
 
+// as of kernel 6.8 we need prototype definitions for non-static functions
+// (in addition to actual definitions)
+
+
+// definitions for patch_cirrus_apple.h
+
+void cs_8409_dump_callback(struct hda_codec *codec);
+
+struct hda_jack_callback *
+cs_8409_hda_jack_detect_enable_callback(struct hda_codec *codec, hda_nid_t nid, int dev_id, int tag,
+				    hda_jack_callback_fn func);
+
+int cs_8409_apple_build_pcms(struct hda_codec *codec);
+
+void cs_8409_cs42l83_mark_jack(struct hda_codec *codec);
+
+int cs_8409_apple_build_pcms(struct hda_codec *codec);
+
+void cs_8409_cs42l83_mark_jack(struct hda_codec *codec);
+
+void cs_8409_cs42l83_jack_report_sync(struct hda_codec *codec);
+
+void cs_8409_cs42l83_jack_report_hp_update(struct hda_codec *codec, int plugin);
+
+void cs_8409_cs42l83_jack_unsol_event(struct hda_codec *codec, unsigned int res);
+
+void cs_8409_apple_free(struct hda_codec *codec);
+
+
+
+
 static void cs_8409_pcm_playback_pre_prepare_hook(struct hda_pcm_stream *hinfo, struct hda_codec *codec, 
                                unsigned int stream_tag, unsigned int format, struct snd_pcm_substream *substream,
                                int action);
@@ -1165,7 +1196,8 @@ static void cs_8409_dump_paths(struct hda_codec *codec, const char *label_string
 static int cs_8409_apple_boot_init(struct hda_codec *codec)
 {
 	struct hda_pcm *info = NULL;
-	struct hda_pcm_stream *hinfo = NULL;
+	// originally made non-const for fixup attempts in old kernels - pre 5.13
+	const struct hda_pcm_stream *hinfo = NULL;
 	struct cs8409_apple_spec *spec = NULL;
 	//struct snd_kcontrol *kctl = NULL;
 	int pcmcnt = 0;
