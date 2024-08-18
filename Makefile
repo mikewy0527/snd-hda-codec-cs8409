@@ -19,6 +19,6 @@ clean:
 	make -C $(KERNELBUILD) M=$(shell pwd) clean
 
 install:
-	mkdir -p $(KDIR)/updates/
-	cp snd-hda-codec-cs8409.ko $(KDIR)/updates/
+	mkdir -p $(KERNELDIR)/updates/
+	cp snd-hda-codec-cs8409.ko $(KERNELDIR)/updates/
 	depmod -a
