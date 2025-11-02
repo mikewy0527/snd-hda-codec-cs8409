@@ -623,15 +623,16 @@ static void debug_show_configs(struct hda_codec *codec,
 		      lo_type[cfg->line_out_type]);
 	for (i = 0; i < cfg->line_outs; i++)
 		print_nid_path_idx(codec, "  out", spec->out_paths[i]);
-	if (spec->multi_ios > 0)
+	if (spec->multi_ios > 0) {
 		debug_badness("multi_ios(%d) = %x/%x : %x/%x\n",
 			      spec->multi_ios,
 			      spec->multi_io[0].pin, spec->multi_io[1].pin,
 			      spec->multi_io[0].dac, spec->multi_io[1].dac);
+	}
 	for (i = 0; i < spec->multi_ios; i++)
 		print_nid_path_idx(codec, "  mio",
 				   spec->out_paths[cfg->line_outs + i]);
-	if (cfg->hp_outs)
+	if (cfg->hp_outs) {
 		debug_badness("hp_outs = %x/%x/%x/%x : %x/%x/%x/%x\n",
 		      cfg->hp_pins[0], cfg->hp_pins[1],
 		      cfg->hp_pins[2], cfg->hp_pins[3],
@@ -639,9 +640,10 @@ static void debug_show_configs(struct hda_codec *codec,
 		      spec->multiout.hp_out_nid[1],
 		      spec->multiout.hp_out_nid[2],
 		      spec->multiout.hp_out_nid[3]);
+	}
 	for (i = 0; i < cfg->hp_outs; i++)
 		print_nid_path_idx(codec, "  hp ", spec->hp_paths[i]);
-	if (cfg->speaker_outs)
+	if (cfg->speaker_outs) {
 		debug_badness("spk_outs = %x/%x/%x/%x : %x/%x/%x/%x\n",
 		      cfg->speaker_pins[0], cfg->speaker_pins[1],
 		      cfg->speaker_pins[2], cfg->speaker_pins[3],
@@ -649,6 +651,7 @@ static void debug_show_configs(struct hda_codec *codec,
 		      spec->multiout.extra_out_nid[1],
 		      spec->multiout.extra_out_nid[2],
 		      spec->multiout.extra_out_nid[3]);
+	}
 	for (i = 0; i < cfg->speaker_outs; i++)
 		print_nid_path_idx(codec, "  spk", spec->speaker_paths[i]);
 	for (i = 0; i < 3; i++)
@@ -746,8 +749,9 @@ static int cs_8409_playback_pcm_prepare(struct hda_pcm_stream *hinfo,
         //        call_pcm_playback_hook(hinfo, codec, substream,
         //                               HDA_GEN_PCM_ACT_PREPARE);
 	// but its a trivial function - at least for the moment!!
-	if (err)
+	if (err) {
                 mycodec_dbg(codec, "cs_8409_playback_pcm_prepare err %d\n", err);
+	}
         if (!err)
                 if (spec->pcm_playback_hook)
                         spec->pcm_playback_hook(hinfo, codec, substream, HDA_GEN_PCM_ACT_PREPARE);
@@ -1124,12 +1128,14 @@ static void cs_8409_dump_auto_config(struct hda_codec *codec, const char *label_
         myprintk("snd_hda_intel: auto config multiout is      hp_nid 0x%02x\n", spec->gen.multiout.hp_nid);
 
         for (itm = 0; itm < ARRAY_SIZE(spec->gen.multiout.hp_out_nid); itm++) {
-                if (spec->gen.multiout.hp_out_nid[itm])
+                if (spec->gen.multiout.hp_out_nid[itm]) {
                         myprintk("snd_hda_intel: auto config multiout is  hp_out_nid 0x%02x\n", spec->gen.multiout.hp_out_nid[itm]);
+		}
         }
         for (itm = 0; itm < ARRAY_SIZE(spec->gen.multiout.extra_out_nid); itm++) {
-                if (spec->gen.multiout.extra_out_nid[itm])
+                if (spec->gen.multiout.extra_out_nid[itm]) {
                         myprintk("snd_hda_intel: auto config multiout is xtr_out_nid 0x%02x\n", spec->gen.multiout.extra_out_nid[itm]);
+		}
         }
 
         myprintk("snd_hda_intel: auto config multiout is dig_out_nid 0x%02x\n", spec->gen.multiout.dig_out_nid);
@@ -1224,8 +1230,9 @@ static int cs_8409_apple_boot_init(struct hda_codec *codec)
 	{
 		mycodec_dbg(codec, "hinfo stream nid 0x%02x rates 0x%08x formats 0x%016llx\n",hinfo->nid,hinfo->rates,hinfo->formats);
 	}
-	else
+	else {
 		mycodec_dbg(codec, "hinfo stream NULL\n");
+	}
 
 	// think this is what I need to fixup
 
@@ -1247,8 +1254,9 @@ static int cs_8409_apple_boot_init(struct hda_codec *codec)
 				mycodec_dbg(codec, "cs_8409_apple_boot_init        stream channels max %d\n",hinfo->channels_max);
 				mycodec_dbg(codec, "cs_8409_apple_boot_init        stream maxbps %d\n",hinfo->maxbps);
 			}
-			else
+			else {
 				mycodec_dbg(codec, "cs_8409_apple_boot_init info stream %d NULL\n", stream);
+			}
 		}
 		pcmcnt++;
 	}
@@ -1327,8 +1335,9 @@ static int cs_8409_apple_boot_init(struct hda_codec *codec)
 					// is this bidirectional - because we have no lineout as far as I can see
 				}
 			}
-			else
+			else {
 				mycodec_dbg(codec, "cs_8409_apple_boot_init info pcm stream %d NULL\n", stream);
+			}
 		}
 		pcmcnt++;
 	}
