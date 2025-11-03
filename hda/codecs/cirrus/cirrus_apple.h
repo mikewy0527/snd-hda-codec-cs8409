@@ -6,12 +6,14 @@
 
 //#include "hda_generic.h"
 
-//#include "patch_cs8409.h"
+//#include "cs8409.h"
 
 
 
 // define some explicit debugging print functions
 // under flag control so can be easily turned off
+
+#define TESTING 0
 
 
 #ifdef MYSOUNDDEBUGFULL
@@ -74,7 +76,7 @@ enum {
 
 /*
 
-        it appears from the cs42l42 definitions in patch_cs8409.h that 
+        it appears from the cs42l42 definitions in cs8409.h that 
         each nid is associated with a specific Audio Serial Port
 
         nids as used in Apple
@@ -538,6 +540,9 @@ struct cs8409_apple_spec {
 	int play_init;
 	int capture_init;
 
+        int play_init_count;
+        int capture_init_count;
+
 	// new item to limit times we redo unmute/play
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 8, 0)
 	struct timespec64 last_play_time;
@@ -568,7 +573,7 @@ struct cs8409_apple_spec {
 #define debug_badness(fmt, ...)                                         \
         mycodec_dbg(codec, fmt, ##__VA_ARGS__)
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 13, 0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 13, 0) && TESTING == 0
 
 static void print_nid_path(struct hda_codec *codec,
 			   const char *pfx, struct nid_path *path)
@@ -623,16 +628,18 @@ static void debug_show_configs(struct hda_codec *codec,
 		      lo_type[cfg->line_out_type]);
 	for (i = 0; i < cfg->line_outs; i++)
 		print_nid_path_idx(codec, "  out", spec->out_paths[i]);
-	if (spec->multi_ios > 0) {
+	if (spec->multi_ios > 0)
+		{
 		debug_badness("multi_ios(%d) = %x/%x : %x/%x\n",
 			      spec->multi_ios,
 			      spec->multi_io[0].pin, spec->multi_io[1].pin,
 			      spec->multi_io[0].dac, spec->multi_io[1].dac);
-	}
+		}
 	for (i = 0; i < spec->multi_ios; i++)
 		print_nid_path_idx(codec, "  mio",
 				   spec->out_paths[cfg->line_outs + i]);
-	if (cfg->hp_outs) {
+	if (cfg->hp_outs)
+		{
 		debug_badness("hp_outs = %x/%x/%x/%x : %x/%x/%x/%x\n",
 		      cfg->hp_pins[0], cfg->hp_pins[1],
 		      cfg->hp_pins[2], cfg->hp_pins[3],
@@ -640,10 +647,11 @@ static void debug_show_configs(struct hda_codec *codec,
 		      spec->multiout.hp_out_nid[1],
 		      spec->multiout.hp_out_nid[2],
 		      spec->multiout.hp_out_nid[3]);
-	}
+		}
 	for (i = 0; i < cfg->hp_outs; i++)
 		print_nid_path_idx(codec, "  hp ", spec->hp_paths[i]);
-	if (cfg->speaker_outs) {
+	if (cfg->speaker_outs)
+		{
 		debug_badness("spk_outs = %x/%x/%x/%x : %x/%x/%x/%x\n",
 		      cfg->speaker_pins[0], cfg->speaker_pins[1],
 		      cfg->speaker_pins[2], cfg->speaker_pins[3],
@@ -651,7 +659,7 @@ static void debug_show_configs(struct hda_codec *codec,
 		      spec->multiout.extra_out_nid[1],
 		      spec->multiout.extra_out_nid[2],
 		      spec->multiout.extra_out_nid[3]);
-	}
+		}
 	for (i = 0; i < cfg->speaker_outs; i++)
 		print_nid_path_idx(codec, "  spk", spec->speaker_paths[i]);
 	for (i = 0; i < 3; i++)
@@ -679,13 +687,17 @@ int cs_8409_apple_build_pcms(struct hda_codec *codec);
 
 void cs_8409_cs42l83_mark_jack(struct hda_codec *codec);
 
+int cs_8409_apple_build_pcms(struct hda_codec *codec);
+
+void cs_8409_cs42l83_mark_jack(struct hda_codec *codec);
+
 void cs_8409_cs42l83_jack_report_sync(struct hda_codec *codec);
 
 void cs_8409_cs42l83_jack_report_hp_update(struct hda_codec *codec, int plugin);
 
 void cs_8409_cs42l83_jack_unsol_event(struct hda_codec *codec, unsigned int res);
 
-void cs_8409_apple_free(struct hda_codec *codec);
+void cs_8409_apple_remove(struct hda_codec *codec);
 
 
 
@@ -728,9 +740,9 @@ static int cs_8409_playback_pcm_prepare(struct hda_pcm_stream *hinfo,
 {
         struct hda_gen_spec *spec = codec->spec;
         int err;
-        mycodec_dbg(codec, "cs_8409_playback_pcm_prepare\n");
+        mycodec_info(codec, "cs_8409_playback_pcm_prepare\n");
 
-        mycodec_dbg(codec, "cs_8409_playback_pcm_prepare: NID=0x%x, stream=0x%x, format=0x%x\n",
+        mycodec_info(codec, "cs_8409_playback_pcm_prepare: NID=0x%x, stream=0x%x, format=0x%x\n",
                   hinfo->nid, stream_tag, format);
 
         cs_8409_pcm_playback_pre_prepare_hook(hinfo, codec, stream_tag, format, substream,
@@ -749,9 +761,8 @@ static int cs_8409_playback_pcm_prepare(struct hda_pcm_stream *hinfo,
         //        call_pcm_playback_hook(hinfo, codec, substream,
         //                               HDA_GEN_PCM_ACT_PREPARE);
 	// but its a trivial function - at least for the moment!!
-	if (err) {
-                mycodec_dbg(codec, "cs_8409_playback_pcm_prepare err %d\n", err);
-	}
+	if (err)
+                { mycodec_dbg(codec, "cs_8409_playback_pcm_prepare err %d\n", err); }
         if (!err)
                 if (spec->pcm_playback_hook)
                         spec->pcm_playback_hook(hinfo, codec, substream, HDA_GEN_PCM_ACT_PREPARE);
@@ -776,9 +787,9 @@ static int cs_8409_capture_pcm_prepare(struct hda_pcm_stream *hinfo,
 {
         struct cs8409_apple_spec *spec = codec->spec;
 
-        mycodec_dbg(codec, "cs_8409_capture_pcm_prepare\n");
+        mycodec_info(codec, "cs_8409_capture_pcm_prepare\n");
 
-        mycodec_dbg(codec, "cs_8409_capture_pcm_prepare: NID=0x%x, stream=0x%x, format=0x%x\n",
+        mycodec_info(codec, "cs_8409_capture_pcm_prepare: NID=0x%x, stream=0x%x, format=0x%x\n",
                   hinfo->nid, stream_tag, format);
 
 
@@ -1128,14 +1139,12 @@ static void cs_8409_dump_auto_config(struct hda_codec *codec, const char *label_
         myprintk("snd_hda_intel: auto config multiout is      hp_nid 0x%02x\n", spec->gen.multiout.hp_nid);
 
         for (itm = 0; itm < ARRAY_SIZE(spec->gen.multiout.hp_out_nid); itm++) {
-                if (spec->gen.multiout.hp_out_nid[itm]) {
-                        myprintk("snd_hda_intel: auto config multiout is  hp_out_nid 0x%02x\n", spec->gen.multiout.hp_out_nid[itm]);
-		}
+                if (spec->gen.multiout.hp_out_nid[itm])
+                        { myprintk("snd_hda_intel: auto config multiout is  hp_out_nid 0x%02x\n", spec->gen.multiout.hp_out_nid[itm]); }
         }
         for (itm = 0; itm < ARRAY_SIZE(spec->gen.multiout.extra_out_nid); itm++) {
-                if (spec->gen.multiout.extra_out_nid[itm]) {
-                        myprintk("snd_hda_intel: auto config multiout is xtr_out_nid 0x%02x\n", spec->gen.multiout.extra_out_nid[itm]);
-		}
+                if (spec->gen.multiout.extra_out_nid[itm])
+                        { myprintk("snd_hda_intel: auto config multiout is xtr_out_nid 0x%02x\n", spec->gen.multiout.extra_out_nid[itm]); }
         }
 
         myprintk("snd_hda_intel: auto config multiout is dig_out_nid 0x%02x\n", spec->gen.multiout.dig_out_nid);
@@ -1230,7 +1239,8 @@ static int cs_8409_apple_boot_init(struct hda_codec *codec)
 	{
 		mycodec_dbg(codec, "hinfo stream nid 0x%02x rates 0x%08x formats 0x%016llx\n",hinfo->nid,hinfo->rates,hinfo->formats);
 	}
-	else {
+	else
+	{
 		mycodec_dbg(codec, "hinfo stream NULL\n");
 	}
 
@@ -1254,7 +1264,8 @@ static int cs_8409_apple_boot_init(struct hda_codec *codec)
 				mycodec_dbg(codec, "cs_8409_apple_boot_init        stream channels max %d\n",hinfo->channels_max);
 				mycodec_dbg(codec, "cs_8409_apple_boot_init        stream maxbps %d\n",hinfo->maxbps);
 			}
-			else {
+			else
+			{
 				mycodec_dbg(codec, "cs_8409_apple_boot_init info stream %d NULL\n", stream);
 			}
 		}
@@ -1335,7 +1346,8 @@ static int cs_8409_apple_boot_init(struct hda_codec *codec)
 					// is this bidirectional - because we have no lineout as far as I can see
 				}
 			}
-			else {
+			else
+			{
 				mycodec_dbg(codec, "cs_8409_apple_boot_init info pcm stream %d NULL\n", stream);
 			}
 		}
@@ -1436,9 +1448,8 @@ static int cs_8409_apple_init(struct hda_codec *codec)
 static int cs_8409_apple_resume(struct hda_codec *codec)
 {
         myprintk("snd_hda_intel: cs_8409_apple_resume\n");
-        // code copied from default resume patch ops
-	if (codec->patch_ops.init)
-		codec->patch_ops.init(codec);
+        // code copied from default resume ops
+        snd_hda_codec_init(codec);       
 	snd_hda_regmap_sync(codec);
         myprintk("snd_hda_intel: end cs_8409_apple_resume\n");
         return 0;
@@ -1549,7 +1560,7 @@ int cs_8409_apple_build_pcms(struct hda_codec *codec)
 
 
 // copy of cs8409_fix_caps with debug prints
-// - rather than adding the prints to the patch_cs8409.c routine
+// - rather than adding the prints to the cs8409.c routine
 static void cs8409_fix_caps_debug(struct hda_codec *codec, unsigned int nid)
 {
 	int caps;
@@ -1738,7 +1749,7 @@ void cs_8409_cs42l83_jack_unsol_event(struct hda_codec *codec, unsigned int res)
 // cs_free is just a definition
 //#define cs_8409_apple_free		snd_hda_gen_free
 
-void cs_8409_apple_free(struct hda_codec *codec)
+void cs_8409_apple_remove(struct hda_codec *codec)
 {
 #if 0
         struct cs8409_spec *spec = codec->spec;
@@ -1750,17 +1761,17 @@ void cs_8409_apple_free(struct hda_codec *codec)
 
 	//del_timer(&cs_8409_hp_timer);
 
-	snd_hda_gen_free(codec);
+	snd_hda_gen_remove(codec);
 }
 
 
 // note this must come after any function definitions used
 
-static const struct hda_codec_ops cs_8409_apple_patch_ops = {
+static const struct hda_codec_ops cs_8409_apple_ops = {
 	.build_controls = cs_8409_apple_build_controls,
 	.build_pcms = cs_8409_apple_build_pcms,
 	.init = cs_8409_apple_init,
-	.free = cs_8409_apple_free,
+	.remove = cs_8409_apple_remove,
 	.unsol_event = cs_8409_cs42l83_jack_unsol_event,
 #ifdef CONFIG_PM
         .resume = cs_8409_apple_resume,
@@ -1875,7 +1886,7 @@ static int cs_8409_apple_parse_auto_config(struct hda_codec *codec)
 }
 
 // this is only needed if kernel is < 5.13
-#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 13, 0)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 13, 0) || TESTING
 
 // pigs - we need a lot of hda_generic local functions
 #include "patch_cirrus_hda_generic_copy.h"
@@ -2392,7 +2403,7 @@ static void cs_8409_capture_pcm_hook(struct hda_pcm_stream *hinfo,
 // new attempt if we decide to use the existing fixup mechanism to handle setup
 
 #ifdef APPLE_FIXUPS
-static int patch_cs8409_apple_nouse(struct hda_codec *codec)
+static int cs8409_apple_nouse(struct hda_codec *codec)
 {
 	struct cs8409_apple_spec *spec = codec->spec;
 	//struct cs8409_spec *spec = codec->spec;
@@ -2409,7 +2420,7 @@ static int patch_cs8409_apple_nouse(struct hda_codec *codec)
 
         err = cs8409_apple_parse_auto_config(codec);
         if (err < 0) {
-                cs8409_free(codec);
+                cs8409_remove(codec);
                 return err;
         }
 
@@ -2593,8 +2604,9 @@ static struct cs8409_apple_spec *cs8409_apple_alloc_spec(struct hda_codec *codec
 }
 
 
-static int patch_cs8409_apple(struct hda_codec *codec)
+static int cs8409_apple(struct hda_codec *codec)
 {
+        struct hda_codec_driver *driver;
         struct cs8409_apple_spec *spec;
         int err;
         int itm;
@@ -2695,15 +2707,32 @@ static int patch_cs8409_apple(struct hda_codec *codec)
 	spec->num_scodecs = 1;
 	spec->scodecs[CS8409_CODEC0]->codec = codec;
 
-	//codec->patch_ops = cs8409_cs42l83_patch_ops;
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 17, 0)
+
+        driver = hda_codec_to_driver(codec);
+
+	//codec->ops = cs8409_cs42l83_ops;
 
         if (explicit)
                {
-               //codec->patch_ops = cs_8409_apple_patch_ops_explicit;
+               //driver->ops = &cs_8409_apple_ops_explicit;
                }
         else
-               codec->patch_ops = cs_8409_apple_patch_ops;
+               driver->ops = &cs_8409_apple_ops;
 
+#else
+
+	//codec->patch_ops = cs8409_cs42l83_ops;
+
+        if (explicit)
+               {
+               //codec->patch_ops = cs_8409_apple_ops_explicit;
+               }
+        else
+               codec->patch_ops = cs_8409_apple_ops;
+
+#endif
 
 	// not sure about these
         // the suppress_vmaster is likely reasonable as the Apple way has no dynamic volume controls on either the 8409 chip
@@ -2839,12 +2868,31 @@ static int patch_cs8409_apple(struct hda_codec *codec)
 
 
 #else
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 17, 0)
+
+        driver = hda_codec_to_driver(codec);
+
         if (explicit)
                {
-               //codec->patch_ops = cs_8409_apple_patch_ops_explicit;
+               //driver->ops = &cs_8409_apple_ops_explicit;
                }
         else
-               codec->patch_ops = cs_8409_apple_patch_ops;
+               driver->ops = &cs_8409_apple_ops;
+
+#else
+
+	//codec->patch_ops = cs8409_cs42l83_ops;
+
+        if (explicit)
+               {
+               //codec->patch_ops = cs_8409_apple_ops_explicit;
+               }
+        else
+               codec->patch_ops = cs_8409_apple_ops;
+
+#endif
+
 #endif
 
         // moved to post auto config
@@ -3105,6 +3153,9 @@ static int patch_cs8409_apple(struct hda_codec *codec)
        spec->play_init = 0;
        spec->capture_init = 0;
 
+       spec->play_init_count = 0;
+       spec->capture_init_count = 0;
+
        // init the last play time
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 8, 0)
        ktime_get_real_ts64(&(spec->last_play_time));
@@ -3124,7 +3175,7 @@ static int patch_cs8409_apple(struct hda_codec *codec)
        return 0;
 
  error:
-       cs_8409_apple_free(codec);
+       cs_8409_apple_remove(codec);
        return err;
 }
 

@@ -340,8 +340,6 @@ add_control(struct hda_gen_spec *spec, int type, const char *name,
 	knew->index = cidx;
 	if (get_amp_nid_(val))
 		knew->subdevice = HDA_SUBDEV_AMP_FLAG;
-	if (knew->access == 0)
-		knew->access = SNDRV_CTL_ELEM_ACCESS_READWRITE;
 	knew->private_value = val;
 	return knew;
 }
@@ -352,11 +350,7 @@ static int add_control_with_pfx(struct hda_gen_spec *spec, int type,
 				const char *sfx, int cidx, unsigned long val)
 {
 	char name[SNDRV_CTL_ELEM_ID_NAME_MAXLEN];
-	int len;
-
-	len = snprintf(name, sizeof(name), "%s %s %s", pfx, dir, sfx);
-	if (snd_BUG_ON(len >= sizeof(name)))
-		return -EINVAL;
+	snprintf(name, sizeof(name), "%s %s %s", pfx, dir, sfx);
 	if (!add_control(spec, type, name, cidx, val))
 		return -ENOMEM;
 	return 0;

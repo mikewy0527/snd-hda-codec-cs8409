@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 /*
- * HD audio interface patch for Cirrus Logic CS8409 HDA bridge chip
+ * HD audio codec driver for Cirrus Logic CS8409 HDA bridge chip
  *
  * Copyright (C) 2021 Cirrus Logic, Inc. and
  *                    Cirrus Logic International Semiconductor Ltd.
@@ -17,200 +17,206 @@
 #include "hda_local.h"
 #include "hda_auto_parser.h"
 #include "hda_jack.h"
-#include "hda_generic.h"
+#include "../generic.h"
+
+//#ifdef APPLE_CODECS
+//#include <linux/ctype.h>
+//#include <linux/timer.h>
+//#include <linux/bitops.h>
+//#endif
 
 /* CS8409 Specific Definitions */
 
 enum cs8409_pins {
-	CS8409_PIN_ROOT,
-	CS8409_PIN_AFG,
-	CS8409_PIN_ASP1_OUT_A,
-	CS8409_PIN_ASP1_OUT_B,
-	CS8409_PIN_ASP1_OUT_C,
-	CS8409_PIN_ASP1_OUT_D,
-	CS8409_PIN_ASP1_OUT_E,
-	CS8409_PIN_ASP1_OUT_F,
-	CS8409_PIN_ASP1_OUT_G,
-	CS8409_PIN_ASP1_OUT_H,
-	CS8409_PIN_ASP2_OUT_A,
-	CS8409_PIN_ASP2_OUT_B,
-	CS8409_PIN_ASP2_OUT_C,
-	CS8409_PIN_ASP2_OUT_D,
-	CS8409_PIN_ASP2_OUT_E,
-	CS8409_PIN_ASP2_OUT_F,
-	CS8409_PIN_ASP2_OUT_G,
-	CS8409_PIN_ASP2_OUT_H,
-	CS8409_PIN_ASP1_IN_A,
-	CS8409_PIN_ASP1_IN_B,
-	CS8409_PIN_ASP1_IN_C,
-	CS8409_PIN_ASP1_IN_D,
-	CS8409_PIN_ASP1_IN_E,
-	CS8409_PIN_ASP1_IN_F,
-	CS8409_PIN_ASP1_IN_G,
-	CS8409_PIN_ASP1_IN_H,
-	CS8409_PIN_ASP2_IN_A,
-	CS8409_PIN_ASP2_IN_B,
-	CS8409_PIN_ASP2_IN_C,
-	CS8409_PIN_ASP2_IN_D,
-	CS8409_PIN_ASP2_IN_E,
-	CS8409_PIN_ASP2_IN_F,
-	CS8409_PIN_ASP2_IN_G,
-	CS8409_PIN_ASP2_IN_H,
-	CS8409_PIN_DMIC1,
-	CS8409_PIN_DMIC2,
-	CS8409_PIN_ASP1_TRANSMITTER_A,
-	CS8409_PIN_ASP1_TRANSMITTER_B,
-	CS8409_PIN_ASP1_TRANSMITTER_C,
-	CS8409_PIN_ASP1_TRANSMITTER_D,
-	CS8409_PIN_ASP1_TRANSMITTER_E,
-	CS8409_PIN_ASP1_TRANSMITTER_F,
-	CS8409_PIN_ASP1_TRANSMITTER_G,
-	CS8409_PIN_ASP1_TRANSMITTER_H,
-	CS8409_PIN_ASP2_TRANSMITTER_A,
-	CS8409_PIN_ASP2_TRANSMITTER_B,
-	CS8409_PIN_ASP2_TRANSMITTER_C,
-	CS8409_PIN_ASP2_TRANSMITTER_D,
-	CS8409_PIN_ASP2_TRANSMITTER_E,
-	CS8409_PIN_ASP2_TRANSMITTER_F,
-	CS8409_PIN_ASP2_TRANSMITTER_G,
-	CS8409_PIN_ASP2_TRANSMITTER_H,
-	CS8409_PIN_ASP1_RECEIVER_A,
-	CS8409_PIN_ASP1_RECEIVER_B,
-	CS8409_PIN_ASP1_RECEIVER_C,
-	CS8409_PIN_ASP1_RECEIVER_D,
-	CS8409_PIN_ASP1_RECEIVER_E,
-	CS8409_PIN_ASP1_RECEIVER_F,
-	CS8409_PIN_ASP1_RECEIVER_G,
-	CS8409_PIN_ASP1_RECEIVER_H,
-	CS8409_PIN_ASP2_RECEIVER_A,
-	CS8409_PIN_ASP2_RECEIVER_B,
-	CS8409_PIN_ASP2_RECEIVER_C,
-	CS8409_PIN_ASP2_RECEIVER_D,
-	CS8409_PIN_ASP2_RECEIVER_E,
-	CS8409_PIN_ASP2_RECEIVER_F,
-	CS8409_PIN_ASP2_RECEIVER_G,
-	CS8409_PIN_ASP2_RECEIVER_H,
-	CS8409_PIN_DMIC1_IN,
-	CS8409_PIN_DMIC2_IN,
-	CS8409_PIN_BEEP_GEN,
-	CS8409_PIN_VENDOR_WIDGET
+	CS8409_PIN_ROOT,                // nid 0x00
+	CS8409_PIN_AFG,                 // nid 0x01
+	CS8409_PIN_ASP1_OUT_A,          // nid 0x02
+	CS8409_PIN_ASP1_OUT_B,          // nid 0x03
+	CS8409_PIN_ASP1_OUT_C,          // nid 0x04
+	CS8409_PIN_ASP1_OUT_D,          // nid 0x05
+	CS8409_PIN_ASP1_OUT_E,          // nid 0x05
+	CS8409_PIN_ASP1_OUT_F,          // nid 0x05
+	CS8409_PIN_ASP1_OUT_G,          // nid 0x05
+	CS8409_PIN_ASP1_OUT_H,          // nid 0x05
+	CS8409_PIN_ASP2_OUT_A,          // nid 0x05
+	CS8409_PIN_ASP2_OUT_B,          // nid 0x05
+	CS8409_PIN_ASP2_OUT_C,          // nid 0x05
+	CS8409_PIN_ASP2_OUT_D,          // nid 0x05
+	CS8409_PIN_ASP2_OUT_E,          // nid 0x05
+	CS8409_PIN_ASP2_OUT_F,          // nid 0x05
+	CS8409_PIN_ASP2_OUT_G,          // nid 0x05
+	CS8409_PIN_ASP2_OUT_H,          // nid 0x05
+	CS8409_PIN_ASP1_IN_A,           // nid 0x05
+	CS8409_PIN_ASP1_IN_B,           // nid 0x05
+	CS8409_PIN_ASP1_IN_C,           // nid 0x14
+	CS8409_PIN_ASP1_IN_D,           // nid 0x15
+	CS8409_PIN_ASP1_IN_E,           // nid 0x15
+	CS8409_PIN_ASP1_IN_F,           // nid 0x15
+	CS8409_PIN_ASP1_IN_G,           // nid 0x15
+	CS8409_PIN_ASP1_IN_H,           // nid 0x15
+	CS8409_PIN_ASP2_IN_A,           // nid 0x15
+	CS8409_PIN_ASP2_IN_B,           // nid 0x15
+	CS8409_PIN_ASP2_IN_C,           // nid 0x15
+	CS8409_PIN_ASP2_IN_D,           // nid 0x15
+	CS8409_PIN_ASP2_IN_E,           // nid 0x15
+	CS8409_PIN_ASP2_IN_F,           // nid 0x15
+	CS8409_PIN_ASP2_IN_G,           // nid 0x15
+	CS8409_PIN_ASP2_IN_H,           // nid 0x15
+	CS8409_PIN_DMIC1,               // nid 0x22
+	CS8409_PIN_DMIC2,               // nid 0x23
+	CS8409_PIN_ASP1_TRANSMITTER_A,  // nid 0x24
+	CS8409_PIN_ASP1_TRANSMITTER_B,  // nid 0x25
+	CS8409_PIN_ASP1_TRANSMITTER_C,  // nid 0x25
+	CS8409_PIN_ASP1_TRANSMITTER_D,  // nid 0x25
+	CS8409_PIN_ASP1_TRANSMITTER_E,  // nid 0x25
+	CS8409_PIN_ASP1_TRANSMITTER_F,  // nid 0x25
+	CS8409_PIN_ASP1_TRANSMITTER_G,  // nid 0x25
+	CS8409_PIN_ASP1_TRANSMITTER_H,  // nid 0x25
+	CS8409_PIN_ASP2_TRANSMITTER_A,  // nid 0x25
+	CS8409_PIN_ASP2_TRANSMITTER_B,  // nid 0x25
+	CS8409_PIN_ASP2_TRANSMITTER_C,  // nid 0x25
+	CS8409_PIN_ASP2_TRANSMITTER_D,  // nid 0x25
+	CS8409_PIN_ASP2_TRANSMITTER_E,  // nid 0x25
+	CS8409_PIN_ASP2_TRANSMITTER_F,  // nid 0x25
+	CS8409_PIN_ASP2_TRANSMITTER_G,  // nid 0x25
+	CS8409_PIN_ASP2_TRANSMITTER_H,  // nid 0x25
+	CS8409_PIN_ASP1_RECEIVER_A,     // nid 0x34
+	CS8409_PIN_ASP1_RECEIVER_B,     // nid 0x34
+	CS8409_PIN_ASP1_RECEIVER_C,     // nid 0x34
+	CS8409_PIN_ASP1_RECEIVER_D,     // nid 0x34
+	CS8409_PIN_ASP1_RECEIVER_E,     // nid 0x34
+	CS8409_PIN_ASP1_RECEIVER_F,     // nid 0x34
+	CS8409_PIN_ASP1_RECEIVER_G,     // nid 0x34
+	CS8409_PIN_ASP1_RECEIVER_H,     // nid 0x34
+	CS8409_PIN_ASP2_RECEIVER_A,     // nid 0x34
+	CS8409_PIN_ASP2_RECEIVER_B,     // nid 0x34
+	CS8409_PIN_ASP2_RECEIVER_C,     // nid 0x34
+	CS8409_PIN_ASP2_RECEIVER_D,     // nid 0x34
+	CS8409_PIN_ASP2_RECEIVER_E,     // nid 0x34
+	CS8409_PIN_ASP2_RECEIVER_F,     // nid 0x34
+	CS8409_PIN_ASP2_RECEIVER_G,     // nid 0x34
+	CS8409_PIN_ASP2_RECEIVER_H,     // nid 0x34
+	CS8409_PIN_DMIC1_IN,            // nid 0x44
+	CS8409_PIN_DMIC2_IN,            // nid 0x45
+	CS8409_PIN_BEEP_GEN,            // nid 0x46
+	CS8409_PIN_VENDOR_WIDGET        // nid 0x47
 };
 
 enum cs8409_coefficient_index_registers {
-	CS8409_DEV_CFG1,
-	CS8409_DEV_CFG2,
-	CS8409_DEV_CFG3,
-	CS8409_ASP1_CLK_CTRL1,
-	CS8409_ASP1_CLK_CTRL2,
-	CS8409_ASP1_CLK_CTRL3,
-	CS8409_ASP2_CLK_CTRL1,
-	CS8409_ASP2_CLK_CTRL2,
-	CS8409_ASP2_CLK_CTRL3,
-	CS8409_DMIC_CFG,
-	CS8409_BEEP_CFG,
-	ASP1_RX_NULL_INS_RMV,
-	ASP1_Rx_RATE1,
-	ASP1_Rx_RATE2,
-	ASP1_Tx_NULL_INS_RMV,
-	ASP1_Tx_RATE1,
-	ASP1_Tx_RATE2,
-	ASP2_Rx_NULL_INS_RMV,
-	ASP2_Rx_RATE1,
-	ASP2_Rx_RATE2,
-	ASP2_Tx_NULL_INS_RMV,
-	ASP2_Tx_RATE1,
-	ASP2_Tx_RATE2,
-	ASP1_SYNC_CTRL,
-	ASP2_SYNC_CTRL,
-	ASP1_A_TX_CTRL1,
-	ASP1_A_TX_CTRL2,
-	ASP1_B_TX_CTRL1,
-	ASP1_B_TX_CTRL2,
-	ASP1_C_TX_CTRL1,
-	ASP1_C_TX_CTRL2,
-	ASP1_D_TX_CTRL1,
-	ASP1_D_TX_CTRL2,
-	ASP1_E_TX_CTRL1,
-	ASP1_E_TX_CTRL2,
-	ASP1_F_TX_CTRL1,
-	ASP1_F_TX_CTRL2,
-	ASP1_G_TX_CTRL1,
-	ASP1_G_TX_CTRL2,
-	ASP1_H_TX_CTRL1,
-	ASP1_H_TX_CTRL2,
-	ASP2_A_TX_CTRL1,
-	ASP2_A_TX_CTRL2,
-	ASP2_B_TX_CTRL1,
-	ASP2_B_TX_CTRL2,
-	ASP2_C_TX_CTRL1,
-	ASP2_C_TX_CTRL2,
-	ASP2_D_TX_CTRL1,
-	ASP2_D_TX_CTRL2,
-	ASP2_E_TX_CTRL1,
-	ASP2_E_TX_CTRL2,
-	ASP2_F_TX_CTRL1,
-	ASP2_F_TX_CTRL2,
-	ASP2_G_TX_CTRL1,
-	ASP2_G_TX_CTRL2,
-	ASP2_H_TX_CTRL1,
-	ASP2_H_TX_CTRL2,
-	ASP1_A_RX_CTRL1,
-	ASP1_A_RX_CTRL2,
-	ASP1_B_RX_CTRL1,
-	ASP1_B_RX_CTRL2,
-	ASP1_C_RX_CTRL1,
-	ASP1_C_RX_CTRL2,
-	ASP1_D_RX_CTRL1,
-	ASP1_D_RX_CTRL2,
-	ASP1_E_RX_CTRL1,
-	ASP1_E_RX_CTRL2,
-	ASP1_F_RX_CTRL1,
-	ASP1_F_RX_CTRL2,
-	ASP1_G_RX_CTRL1,
-	ASP1_G_RX_CTRL2,
-	ASP1_H_RX_CTRL1,
-	ASP1_H_RX_CTRL2,
-	ASP2_A_RX_CTRL1,
-	ASP2_A_RX_CTRL2,
-	ASP2_B_RX_CTRL1,
-	ASP2_B_RX_CTRL2,
-	ASP2_C_RX_CTRL1,
-	ASP2_C_RX_CTRL2,
-	ASP2_D_RX_CTRL1,
-	ASP2_D_RX_CTRL2,
-	ASP2_E_RX_CTRL1,
-	ASP2_E_RX_CTRL2,
-	ASP2_F_RX_CTRL1,
-	ASP2_F_RX_CTRL2,
-	ASP2_G_RX_CTRL1,
-	ASP2_G_RX_CTRL2,
-	ASP2_H_RX_CTRL1,
-	ASP2_H_RX_CTRL2,
-	CS8409_I2C_ADDR,
-	CS8409_I2C_DATA,
-	CS8409_I2C_CTRL,
-	CS8409_I2C_STS,
-	CS8409_I2C_QWRITE,
-	CS8409_I2C_QREAD,
-	CS8409_SPI_CTRL,
-	CS8409_SPI_TX_DATA,
-	CS8409_SPI_RX_DATA,
-	CS8409_SPI_STS,
-	CS8409_PFE_COEF_W1, /* Parametric filter engine coefficient write 1*/
-	CS8409_PFE_COEF_W2,
-	CS8409_PFE_CTRL1,
-	CS8409_PFE_CTRL2,
-	CS8409_PRE_SCALE_ATTN1,
-	CS8409_PRE_SCALE_ATTN2,
-	CS8409_PFE_COEF_MON1, /* Parametric filter engine coefficient monitor 1*/
-	CS8409_PFE_COEF_MON2,
-	CS8409_ASP1_INTRN_STS,
-	CS8409_ASP2_INTRN_STS,
-	CS8409_ASP1_RX_SCLK_COUNT,
-	CS8409_ASP1_TX_SCLK_COUNT,
-	CS8409_ASP2_RX_SCLK_COUNT,
-	CS8409_ASP2_TX_SCLK_COUNT,
-	CS8409_ASP_UNS_RESP_MASK,
+	CS8409_DEV_CFG1,                // reg 0x00
+	CS8409_DEV_CFG2,                // reg 0x00
+	CS8409_DEV_CFG3,                // reg 0x00
+	CS8409_ASP1_CLK_CTRL1,          // reg 0x03
+	CS8409_ASP1_CLK_CTRL2,          // reg 0x03
+	CS8409_ASP1_CLK_CTRL3,          // reg 0x03
+	CS8409_ASP2_CLK_CTRL1,          // reg 0x03
+	CS8409_ASP2_CLK_CTRL2,          // reg 0x03
+	CS8409_ASP2_CLK_CTRL3,          // reg 0x03
+	CS8409_DMIC_CFG,                // reg 0x09
+	CS8409_BEEP_CFG,                // reg 0x0a
+	ASP1_RX_NULL_INS_RMV,           // reg 0x0b
+	ASP1_Rx_RATE1,                  // reg 0x0c
+	ASP1_Rx_RATE2,                  // reg 0x0d
+	ASP1_Tx_NULL_INS_RMV,           // reg 0x0e
+	ASP1_Tx_RATE1,                  // reg 0x0f
+	ASP1_Tx_RATE2,                  // reg 0x10
+	ASP2_Rx_NULL_INS_RMV,           // reg 0x11
+	ASP2_Rx_RATE1,                  // reg 0x12
+	ASP2_Rx_RATE2,                  // reg 0x13
+	ASP2_Tx_NULL_INS_RMV,           // reg 0x14
+	ASP2_Tx_RATE1,                  // reg 0x15
+	ASP2_Tx_RATE2,                  // reg 0x16
+	ASP1_SYNC_CTRL,                 // reg 0x17
+	ASP2_SYNC_CTRL,                 // reg 0x18
+	ASP1_A_TX_CTRL1,                // reg 0x19
+	ASP1_A_TX_CTRL2,                // reg 0x19
+	ASP1_B_TX_CTRL1,                // reg 0x19
+	ASP1_B_TX_CTRL2,                // reg 0x19
+	ASP1_C_TX_CTRL1,                // reg 0x19
+	ASP1_C_TX_CTRL2,                // reg 0x19
+	ASP1_D_TX_CTRL1,                // reg 0x19
+	ASP1_D_TX_CTRL2,                // reg 0x19
+	ASP1_E_TX_CTRL1,                // reg 0x19
+	ASP1_E_TX_CTRL2,                // reg 0x19
+	ASP1_F_TX_CTRL1,                // reg 0x19
+	ASP1_F_TX_CTRL2,                // reg 0x19
+	ASP1_G_TX_CTRL1,                // reg 0x19
+	ASP1_G_TX_CTRL2,                // reg 0x19
+	ASP1_H_TX_CTRL1,                // reg 0x19
+	ASP1_H_TX_CTRL2,                // reg 0x19
+	ASP2_A_TX_CTRL1,                // reg 0x19
+	ASP2_A_TX_CTRL2,                // reg 0x19
+	ASP2_B_TX_CTRL1,                // reg 0x19
+	ASP2_B_TX_CTRL2,                // reg 0x19
+	ASP2_C_TX_CTRL1,                // reg 0x19
+	ASP2_C_TX_CTRL2,                // reg 0x19
+	ASP2_D_TX_CTRL1,                // reg 0x19
+	ASP2_D_TX_CTRL2,                // reg 0x19
+	ASP2_E_TX_CTRL1,                // reg 0x19
+	ASP2_E_TX_CTRL2,                // reg 0x19
+	ASP2_F_TX_CTRL1,                // reg 0x19
+	ASP2_F_TX_CTRL2,                // reg 0x19
+	ASP2_G_TX_CTRL1,                // reg 0x19
+	ASP2_G_TX_CTRL2,                // reg 0x19
+	ASP2_H_TX_CTRL1,                // reg 0x19
+	ASP2_H_TX_CTRL2,                // reg 0x19
+	ASP1_A_RX_CTRL1,                // reg 0x19
+	ASP1_A_RX_CTRL2,                // reg 0x19
+	ASP1_B_RX_CTRL1,                // reg 0x19
+	ASP1_B_RX_CTRL2,                // reg 0x19
+	ASP1_C_RX_CTRL1,                // reg 0x19
+	ASP1_C_RX_CTRL2,                // reg 0x19
+	ASP1_D_RX_CTRL1,                // reg 0x19
+	ASP1_D_RX_CTRL2,                // reg 0x19
+	ASP1_E_RX_CTRL1,                // reg 0x19
+	ASP1_E_RX_CTRL2,                // reg 0x19
+	ASP1_F_RX_CTRL1,                // reg 0x19
+	ASP1_F_RX_CTRL2,                // reg 0x19
+	ASP1_G_RX_CTRL1,                // reg 0x19
+	ASP1_G_RX_CTRL2,                // reg 0x19
+	ASP1_H_RX_CTRL1,                // reg 0x19
+	ASP1_H_RX_CTRL2,                // reg 0x19
+	ASP2_A_RX_CTRL1,                // reg 0x19
+	ASP2_A_RX_CTRL2,                // reg 0x19
+	ASP2_B_RX_CTRL1,                // reg 0x19
+	ASP2_B_RX_CTRL2,                // reg 0x19
+	ASP2_C_RX_CTRL1,                // reg 0x19
+	ASP2_C_RX_CTRL2,                // reg 0x19
+	ASP2_D_RX_CTRL1,                // reg 0x19
+	ASP2_D_RX_CTRL2,                // reg 0x19
+	ASP2_E_RX_CTRL1,                // reg 0x19
+	ASP2_E_RX_CTRL2,                // reg 0x19
+	ASP2_F_RX_CTRL1,                // reg 0x19
+	ASP2_F_RX_CTRL2,                // reg 0x19
+	ASP2_G_RX_CTRL1,                // reg 0x19
+	ASP2_G_RX_CTRL2,                // reg 0x19
+	ASP2_H_RX_CTRL1,                // reg 0x19
+	ASP2_H_RX_CTRL2,                // reg 0x19
+	CS8409_I2C_ADDR,                // reg 0x59
+	CS8409_I2C_DATA,                // reg 0x59
+	CS8409_I2C_CTRL,                // reg 0x59
+	CS8409_I2C_STS,                 // reg 0x59
+	CS8409_I2C_QWRITE,              // reg 0x59
+	CS8409_I2C_QREAD,               // reg 0x59
+	CS8409_SPI_CTRL,                // reg 0x59
+	CS8409_SPI_TX_DATA,             // reg 0x59
+	CS8409_SPI_RX_DATA,             // reg 0x59
+	CS8409_SPI_STS,                 // reg 0x59
+	CS8409_PFE_COEF_W1,             // reg 0x63      /* Parametric filter engine coefficient write 1*/
+	CS8409_PFE_COEF_W2,             // reg 0x64
+	CS8409_PFE_CTRL1,               // reg 0x64
+	CS8409_PFE_CTRL2,               // reg 0x64
+	CS8409_PRE_SCALE_ATTN1,         // reg 0x64
+	CS8409_PRE_SCALE_ATTN2,         // reg 0x64
+	CS8409_PFE_COEF_MON1,           // reg 0x69      /* Parametric filter engine coefficient monitor 1*/
+	CS8409_PFE_COEF_MON2,           // reg 0x6a
+	CS8409_ASP1_INTRN_STS,          // reg 0x6a
+	CS8409_ASP2_INTRN_STS,          // reg 0x6a
+	CS8409_ASP1_RX_SCLK_COUNT,      // reg 0x6a
+	CS8409_ASP1_TX_SCLK_COUNT,      // reg 0x6a
+	CS8409_ASP2_RX_SCLK_COUNT,      // reg 0x6a
+	CS8409_ASP2_TX_SCLK_COUNT,      // reg 0x6a
+	CS8409_ASP_UNS_RESP_MASK,       // reg 0x6a
 	CS8409_LOOPBACK_CTRL = 0x80,
 	CS8409_PAD_CFG_SLW_RATE_CTRL = 0x82, /* Pad Config and Slew Rate Control (CIR = 0x0082) */
 };
@@ -433,8 +439,8 @@ struct cs8409_spec {
 	// if headphone has buttons or not
 	int have_buttons;
 
-        // current stream channel count
-        int stream_channels;
+	// current stream channel count
+	int stream_channels;
 
 	// set when playing for plug/unplug events while playing
 	int playing;
@@ -470,6 +476,9 @@ struct cs8409_spec {
 	int play_init;
 	int capture_init;
 
+	int play_init_count;
+	int capture_init_count;
+
 
 	// new item to limit times we redo unmute/play
 	struct timespec64 last_play_time;
@@ -485,6 +494,8 @@ struct cs8409_spec {
 	/* verb exec op override */
 	int (*exec_verb)(struct hdac_device *dev, unsigned int cmd, unsigned int flags,
 			 unsigned int *res);
+	/* unsol_event op override */
+	void (*unsol_event)(struct hda_codec *codec, unsigned int res);
 };
 
 extern const struct snd_kcontrol_new cs42l42_dac_volume_mixer;

@@ -1,6 +1,3 @@
-snd-hda-codec-cs8409-objs :=	patch_cs8409.o patch_cs8409-tables.o
-obj-$(CONFIG_SND_HDA_CODEC_CS8409) += snd-hda-codec-cs8409.o
-
 # debug build flags
 #KBUILD_EXTRA_CFLAGS = "-DCONFIG_SND_DEBUG=1 -DMYSOUNDDEBUGFULL -DAPPLE_PINSENSE_FIXUP -DAPPLE_CODECS -DCONFIG_SND_HDA_RECONFIG=1 -Wno-unused-variable -Wno-unused-function"
 # normal build flags
@@ -14,11 +11,11 @@ endif
 KERNELBUILD := $(KERNELDIR)/build
 
 all:
-	make -C $(KERNELBUILD) CFLAGS_MODULE=$(KBUILD_EXTRA_CFLAGS) M=$(shell pwd) modules
+	make -C $(KERNELBUILD) CFLAGS_MODULE=$(KBUILD_EXTRA_CFLAGS) M=$(shell pwd)/build/hda modules
+
 clean:
-	make -C $(KERNELBUILD) M=$(shell pwd) clean
+	make -C $(KERNELBUILD) M=$(shell pwd)/build/hda clean
 
 install:
-	mkdir -p $(KERNELDIR)/updates/
-	cp snd-hda-codec-cs8409.ko $(KERNELDIR)/updates/
+	make INSTALL_MOD_DIR=updates -C $(KERNELBUILD) M=$(shell pwd)/build/hda CONFIG_MODULE_SIG_ALL=n modules_install
 	depmod -a

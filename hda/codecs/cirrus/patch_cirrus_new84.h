@@ -83,9 +83,7 @@ static unsigned int hda_set_node_power_state_dbg(struct hda_codec *codec, hda_ni
         unsigned int wcaps = get_wcaps(codec, nid);
         unsigned int state = power_state;
 	//unsigned int current_state;
-	if (dbgflg) {
-		mycodec_info(codec, "hda_set_node_power_state  nid 0x%02x power %d\n",nid,power_state);
-	}
+	if (dbgflg) { mycodec_info(codec, "hda_set_node_power_state  nid 0x%02x power %d\n",nid,power_state); }
         state = snd_hda_codec_read(codec, nid, 0, AC_VERB_GET_POWER_STATE, 0);
         if (!(state & AC_PWRST_ERROR)) {
 	        if (state != power_state) {
@@ -112,9 +110,7 @@ static unsigned int hda_set_node_power_state_dbg(struct hda_codec *codec, hda_ni
 	else {
 		dev_info(hda_codec_dev(codec), "hda_set_node_power_state ERROR!! nid 0x%02x 0x%04x\n",nid, state);
 	}
-	if (dbgflg) {
-		mycodec_info(codec, "hda_set_node_power_state end power %d\n",state);
-	}
+	if (dbgflg) { mycodec_info(codec, "hda_set_node_power_state end power %d\n",state); }
 
         return state;
 }
@@ -201,14 +197,13 @@ static inline unsigned int cs_8409_vendor_coef_set_mask(struct hda_codec *codec,
         mask_coef = (retval & ~mask) | coef;
         if (srcval != 0)
         {
-		if (srcidx != 0 && mask_coef != srcval) {
-			myprintk_dbg("snd_hda_intel: cs_8409_vendor_coef_set_mask 0x%04x 0x%04x: 0x%04x (0x%04x 0x%04x 0x%04x) 0x%04x != 0x%04x %d BAD",idx,coef,mask_coef,retval,coef,mask, mask_coef, srcval, srcidx);
-		}
-	        else {
-                        myprintk_dbg("snd_hda_intel: cs_8409_vendor_coef_set_mask 0x%04x 0x%04x: 0x%04x (0x%04x 0x%04x 0x%04x) %d",idx,coef,mask_coef,retval,coef,mask,srcidx);
-		}
+		if (srcidx != 0 && mask_coef != srcval)
+			{ myprintk_dbg("snd_hda_intel: cs_8409_vendor_coef_set_mask 0x%04x 0x%04x: 0x%04x (0x%04x 0x%04x 0x%04x) 0x%04x != 0x%04x %d BAD",idx,coef,mask_coef,retval,coef,mask, mask_coef, srcval, srcidx); }
+	        else
+                        { myprintk_dbg("snd_hda_intel: cs_8409_vendor_coef_set_mask 0x%04x 0x%04x: 0x%04x (0x%04x 0x%04x 0x%04x) %d",idx,coef,mask_coef,retval,coef,mask,srcidx); }
         }
-	else {
+	else
+	{
                 //if (mask != 0xffff)
                 myprintk_dbg("snd_hda_intel: cs_8409_vendor_coef_set_mask 0x%04x 0x%04x: 0x%04x (0x%04x 0x%04x 0x%04x) %d",idx,coef,mask_coef,retval,coef,mask,srcidx);
 	}
@@ -701,7 +696,6 @@ get_hda_cvt_setup_apple_8409(struct hda_codec *codec, hda_nid_t nid)
 		case 0x1a:
 			return &spec->nid_0x1a;
 		default:
-			break;
 	}
 
 	codec_err(codec, "get_hda_cvt_setup_apple_8409: UNKNOWN NID!! 0x%02x\n", nid);
@@ -722,12 +716,10 @@ static void cs_8409_dump_stream_format(struct hda_codec *codec, hda_nid_t nid)
                         break;
         }
 
-        if (p != NULL) {
-                mycodec_dbg(codec, "cs_8409_dump_stream_format: NID=0x%x, codec cached values: stream=0x%x, channel=%d, format=0x%x\n", nid, p->stream_tag, p->channel_id, p->format_id);
-	}
-        else {
-                mycodec_dbg(codec, "cs_8409_dump_stream_format: NID=0x%x, codec cached values: NULL\n", nid);
-	}
+        if (p != NULL)
+                { mycodec_dbg(codec, "cs_8409_dump_stream_format: NID=0x%x, codec cached values: stream=0x%x, channel=%d, format=0x%x\n", nid, p->stream_tag, p->channel_id, p->format_id); }
+        else
+                { mycodec_dbg(codec, "cs_8409_dump_stream_format: NID=0x%x, codec cached values: NULL\n", nid); }
 }
 
 static void cs_8409_reset_stream_format(struct hda_codec *codec, hda_nid_t nid, int format, int doreset)
@@ -890,12 +882,10 @@ static void cs_8409_really_update_stream_format(struct hda_codec *codec, hda_nid
 
         mycodec_info(codec, "cs_8409_really_update_stream_format to update tag 0x%08x chnl 0x%08x fmt 0x%08x\n", p->stream_tag, p->channel_id, p->format_id);
 
-        if (update_stream_id == 2) {
-                mycodec_info(codec, "cs_8409_really_update_stream_format new       tag 0x%08x chnl 0x%08x fmt 0x%08x\n", stream_tag_sv, new_channel_id, format_id_sv);
-	}
-        else {
-                mycodec_info(codec, "cs_8409_really_update_stream_format new       tag 0x%08x chnl 0x%08x fmt 0x%08x\n", stream_tag_sv, channel_id_sv, format_id_sv);
-	}
+        if (update_stream_id == 2)
+                { mycodec_info(codec, "cs_8409_really_update_stream_format new       tag 0x%08x chnl 0x%08x fmt 0x%08x\n", stream_tag_sv, new_channel_id, format_id_sv); }
+        else
+                { mycodec_info(codec, "cs_8409_really_update_stream_format new       tag 0x%08x chnl 0x%08x fmt 0x%08x\n", stream_tag_sv, channel_id_sv, format_id_sv); }
 
         cs_8409_dump_stream_format(codec, nid);
 
@@ -1272,6 +1262,23 @@ void cs_8409_capture_cleanup(struct hda_codec *codec)
 
 }
 
+// routine to clear unsol list
+static void cs_8409_clear_external_device_unsolicited_responses(struct hda_codec *codec)
+{
+	struct cs8409_apple_spec *spec = codec->spec;
+	struct unsol_item *unsol_entry = NULL;
+	struct unsol_item *unsol_temp = NULL;
+	if (!list_empty(&spec->unsol_list)) {
+		codec_info(codec, "cs_8409_clear_external_device_unsolicited_responses UNSOL start\n");
+		list_for_each_entry_safe(unsol_entry, unsol_temp, &spec->unsol_list, list)
+		{
+			list_del_init(&unsol_entry->list);
+			spec->unsol_items_prealloc_used[unsol_entry->idx] = 0;
+			memset(unsol_entry, 0, sizeof(struct unsol_item));
+		}
+		codec_info(codec, "cs_8409_clear_external_device_unsolicited_responses UNSOL end\n");
+	}
+}
 
 static void cs_8409_cs42l83_unsolicited_response_finalize(struct hda_codec *codec, unsigned int res);
 
@@ -1368,7 +1375,7 @@ static void cs_8409_cs42l83_unsolicited_response_finalize(struct hda_codec *code
 
 		// note the data version will only play thro the headphones for a single time
 		//cs_8409_external_device_unsolicited_response_data(codec, res);
-		cs_8409_external_device_unsolicited_response(codec);
+		cs_8409_external_device_unsolicited_response(codec, 0, 1);
 	}
 }
 
@@ -1535,7 +1542,17 @@ static void cs_8409_pcm_playback_pre_prepare_hook(struct hda_pcm_stream *hinfo, 
 		struct timespec curtim;
 		getnstimeofday(&curtim);
 #endif
-		myprintk("snd_hda_intel: command cs_8409_pcm_playback_pre_prepare_hook HOOK PREPARE init %d last %lld cur %lld",spec->play_init,spec->last_play_time.tv_sec,curtim.tv_sec);
+		spec->play_init_count++;
+		myprintk("snd_hda_intel: command cs_8409_pcm_playback_pre_prepare_hook HOOK PREPARE init %d %d last %lld cur %lld",spec->play_init,spec->play_init_count,spec->last_play_time.tv_sec,curtim.tv_sec);
+                //dump_stack();
+		// for some reason this is being called twice within short time so setup is being done twice
+		// with no intervening cleanup
+		// which may be introducing glitches in the headset/headphone stream - which it is!!!
+		// try suppressing any further calls
+		// well great apparently its a feature this function can be called multiple times!!
+		// looking at examples and Alsa driver docs it appears the idea of this function is to set
+		// the stream parameters - so lets let it set the stream parameters every time
+		// but only do the main apple setup once
 		if (1) {
 			struct hda_cvt_setup_apple *p = NULL;
 			//int power_chk = 0;
@@ -1559,6 +1576,10 @@ static void cs_8409_pcm_playback_pre_prepare_hook(struct hda_pcm_stream *hinfo, 
 
 			hda_check_power_state(codec, 0x1a, 1);
 			hda_check_power_state(codec, 0x3c, 1);
+		}
+
+		if (spec->play_init_count == 1) {
+			struct hda_cvt_setup_apple *p = NULL;
 
 			// for the moment have junky test here
 			if (spec->jack_present)
@@ -1656,9 +1677,15 @@ static void cs_8409_playback_pcm_hook(struct hda_pcm_stream *hinfo, struct hda_c
 		//struct hda_cvt_setup_apple *p = NULL;
 		myprintk("snd_hda_intel: command cs_8409_playback_pcm_hook open");
 
+		spec->play_init_count = 0;
+
 		myprintk("snd_hda_intel: command cs_8409_playback_pcm_hook open end");
 	} else if (action == HDA_GEN_PCM_ACT_PREPARE) {
 		// so this comes AFTER the stream format, frequency setup verbs are sent for the pcm stream
+		// note that this can be called multiple times apparently
+		// not clear what if any the differences are for those multiple calls
+		// - does mean we need to ensure we only do most operations once
+		// (most of the work is done in the pre prepare function)
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 8, 0)
 		struct timespec64 curtim;
 		ktime_get_real_ts64(&curtim);
@@ -1666,7 +1693,8 @@ static void cs_8409_playback_pcm_hook(struct hda_pcm_stream *hinfo, struct hda_c
 		struct timespec curtim;
 		getnstimeofday(&curtim);
 #endif
-		myprintk("snd_hda_intel: command cs_8409_playback_pcm_hook HOOK PREPARE init %d last %lld cur %lld",spec->play_init,spec->last_play_time.tv_sec,curtim.tv_sec);
+		myprintk("snd_hda_intel: command cs_8409_playback_pcm_hook HOOK PREPARE init %d %d last %lld cur %lld",spec->play_init,spec->play_init_count,spec->last_play_time.tv_sec,curtim.tv_sec);
+                //dump_stack();
 		//int power_chk = 0;
 		//power_chk = snd_hda_codec_read(codec, codec->core.afg, 0, AC_VERB_GET_POWER_STATE, 0);
 		//myprintk("snd_hda_intel: command cs_8409_playback_pcm_hook power check 0x01 2 %d", power_chk);
@@ -1677,6 +1705,7 @@ static void cs_8409_playback_pcm_hook(struct hda_pcm_stream *hinfo, struct hda_c
 		{
 			codec_info(codec, "cs_8409_playback_pcm_hook - performing UNSOL responses\n");
 			cs_8409_perform_external_device_unsolicited_responses(codec);
+			//cs_8409_clear_external_device_unsolicited_responses(codec);
 		}
 		spec->playing = 1;
 		myprintk("snd_hda_intel: command cs_8409_playback_pcm_hook HOOK PREPARE end");
@@ -1706,6 +1735,7 @@ static void cs_8409_playback_pcm_hook(struct hda_pcm_stream *hinfo, struct hda_c
 			codec_info(codec, "cs_8409_playback_pcm_hook - performing UNSOL responses\n");
 			cs_8409_perform_external_device_unsolicited_responses(codec);
 		}
+		spec->play_init_count = 0;
 		// not sure of this position yet
 		spec->playing = 0;
         	power_chk = snd_hda_codec_read(codec, codec->core.afg, 0, AC_VERB_GET_POWER_STATE, 0);
@@ -1726,7 +1756,14 @@ static void cs_8409_pcm_capture_pre_prepare_hook(struct hda_pcm_stream *hinfo, s
 	struct cs8409_apple_spec *spec = codec->spec;
 
 	if (action == HDA_GEN_PCM_ACT_PREPARE) {
-		myprintk("snd_hda_intel: command cs_8409_pcm_capture_pre_prepare_hook HOOK PREPARE init %d",spec->capture_init);
+		spec->capture_init_count++;
+		myprintk("snd_hda_intel: command cs_8409_pcm_capture_pre_prepare_hook HOOK PREPARE init %d %d",spec->capture_init,spec->capture_init_count);
+
+		// for some reason this is being called twice within short time
+		// well great apparently its a feature this function can be called multiple times!!
+		// looking at examples and Alsa driver docs it appears the idea of this function is to set
+		// the stream parameters - so lets let it set the stream parameters every time
+		// but only do the main apple setup once
 
 		// so the first action for internal mike recording (via Quicktime)
 		// is a headphone sense
@@ -1746,32 +1783,36 @@ static void cs_8409_pcm_capture_pre_prepare_hook(struct hda_pcm_stream *hinfo, s
 		//cs_8409_setup_stream_format(codec, hinfo->nid, stream_tag, format);
 		cs_8409_store_stream_format(codec, hinfo->nid, stream_tag, format);
 
+		// ensure the setup is only done once
+		if (spec->capture_init_count == 1) {
 
-		// for the moment have junky test here
-		if (spec->jack_present) {
-			spec->block_unsol = 1;
-			if (spec->have_mike)
-			{
-				// so it seems if we have a headset mike we always enable the
-				// headphones even if just capturing
-				if (spec->headset_play_format_setup_needed)
+			// for the moment have junky test here
+			if (spec->jack_present) {
+				spec->block_unsol = 1;
+				if (spec->have_mike)
 				{
-					cs_8409_headplay_setup(codec);
-					spec->headset_play_format_setup_needed = 0;
+					// so it seems if we have a headset mike we always enable the
+					// headphones even if just capturing
+					if (spec->headset_play_format_setup_needed)
+					{
+						cs_8409_headplay_setup(codec);
+						spec->headset_play_format_setup_needed = 0;
+					}
+					if (spec->headset_capture_format_setup_needed)
+					{
+						cs_8409_headcapture_setup(codec);
+						spec->headset_capture_format_setup_needed = 0;
+					}
 				}
-				if (spec->headset_capture_format_setup_needed)
-				{
-					cs_8409_headcapture_setup(codec);
-					spec->headset_capture_format_setup_needed = 0;
-				}
+				// I think this is impossible - this would say we tried to capture
+				// using a headset without mike
+				// NOTE - still not fixed linein/lineout working - this may need
+				// changing here
 			}
-			// I think this is impossible - this would say we tried to capture
-			// using a headset without mike
-			// NOTE - still not fixed linein/lineout working - this may need
-			// changing here
+			else
+				cs_8409_capture_setup(codec);
 		}
-		else
-			cs_8409_capture_setup(codec);
+
 		myprintk("snd_hda_intel: command cs_8409_capture_pcm_hook setup capture called");
 
 		spec->capturing = 0;
@@ -1811,7 +1852,8 @@ static void cs_8409_capture_pcm_hook(struct hda_pcm_stream *hinfo, struct hda_co
                 printk("snd_hda_intel: command cs_8409_capture_pcm_hook HOOK init  - CODEC NULL exit");
                 return;
         }
-        else {
+        else
+	{
                 myprintk_dbg("snd_hda_intel: command cs_8409_capture_pcm_hook HOOK init  - CODEC NOT NULL");
 	}
 
@@ -1826,10 +1868,15 @@ static void cs_8409_capture_pcm_hook(struct hda_pcm_stream *hinfo, struct hda_co
 	if (action == HDA_GEN_PCM_ACT_OPEN) {
 		//struct hda_cvt_setup_apple *p = NULL;
 		myprintk("snd_hda_intel: command cs_8409_capture_pcm_hook open");
+		spec->capture_init_count = 0;
 
 		myprintk("snd_hda_intel: command cs_8409_capture_pcm_hook open end");
 	} else if (action == HDA_GEN_PCM_ACT_PREPARE) {
 		// so this comes AFTER the stream format, frequency setup verbs are sent for the pcm stream
+		// note that this can be called multiple times apparently
+		// not clear what if any the differences are for those multiple calls
+		// - does mean we need to ensure we only do most operations once
+		// (most of the work is done in the pre prepare function)
 		myprintk("snd_hda_intel: command cs_8409_capture_pcm_hook HOOK PREPARE init %d",spec->capture_init);
 		// this is where we need to finally unset the block_unsol
 		// - which also means this is where we should check for unsolicited responses
@@ -1877,6 +1924,7 @@ static void cs_8409_capture_pcm_hook(struct hda_pcm_stream *hinfo, struct hda_co
 			codec_info(codec, "cs_8409_capture_pcm_hook - performing UNSOL responses\n");
 			cs_8409_perform_external_device_unsolicited_responses(codec);
 		}
+		spec->capture_init_count = 0;
 		// not sure of this position yet
 		spec->capturing = 0;
 		power_chk = snd_hda_codec_read(codec, codec->core.afg, 0, AC_VERB_GET_POWER_STATE, 0);
