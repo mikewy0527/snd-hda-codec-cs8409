@@ -18,4 +18,4 @@ clean:
 
 install:
 	make INSTALL_MOD_DIR=updates -C $(KERNELBUILD) M=$(shell pwd)/build/hda CONFIG_MODULE_SIG_ALL=n modules_install
-	depmod -a
+	depmod -a $(KERNELRELEASE)
