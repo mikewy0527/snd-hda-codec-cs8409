@@ -15,10 +15,11 @@ KERNELBUILD := $(KERNELDIR)/build
 
 all:
 	make -C $(KERNELBUILD) CFLAGS_MODULE=$(KBUILD_EXTRA_CFLAGS) M=$(shell pwd) modules
+
 clean:
 	make -C $(KERNELBUILD) M=$(shell pwd) clean
 
 install:
 	mkdir -p $(KERNELDIR)/updates/
 	cp snd-hda-codec-cs8409.ko $(KERNELDIR)/updates/
-	depmod -a
+	depmod -a $(KERNELRELEASE)
